@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ร้านถุงเงินเภสัช — ระบบขายหน้าร้าน</title>
+<link rel="icon" href="assets/logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;500;600;700&family=Kanit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div class="app">
+
+  <!-- Top bar: brand + bill tabs -->
+  <header class="topbar">
+    <div class="brand">
+      <img class="brand-logo" src="assets/logo.png" alt="ร้านถุงเงินเภสัช" />
+      <span class="brand-text">
+        <span class="brand-mark">ร้านถุงเงินเภสัช</span>
+        <span class="brand-sub">ระบบขายหน้าร้านมืออาชีพ</span>
+      </span>
+    </div>
+
+    <nav class="view-switch">
+      <button class="view-btn active" data-view="pos">ขายสินค้า</button>
+      <button class="view-btn" data-view="dashboard">แดชบอร์ด</button>
+    </nav>
+
+    <div class="tabs" id="billTabs"></div>
+    <button class="btn-new-tab" id="newBillBtn" title="แยกบิลใหม่">
+      <svg viewBox="0 0 24 24" fill="none" width="16" height="16"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      แยกบิล
+    </button>
+    <div class="clock" id="clock"></div>
+  </header>
+
+  <!-- Full-width scan / search bar -->
+  <div class="scan-bar">
+    <div class="scan-box">
+      <svg class="scan-icon" viewBox="0 0 24 24" fill="none"><path d="M3 7V4a1 1 0 0 1 1-1h3M21 7V4a1 1 0 0 0-1-1h-3M3 17v3a1 1 0 0 0 1 1h3M21 17v3a1 1 0 0 1-1 1h-3M3 12h18" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <input
+        type="text"
+        id="scanInput"
+        placeholder="ยิงบาร์โค้ด หรือพิมพ์ชื่อ/รหัสสินค้าเพื่อค้นหา..."
+        autocomplete="off"
+        autofocus
+      />
+      <button id="clearSearch" class="btn-clear-search" title="ล้างช่องค้นหา">✕</button>
+      <button id="cameraScanBtn" class="btn-camera-scan" type="button" title="สแกนบาร์โค้ดด้วยกล้องมือถือ">
+        <svg viewBox="0 0 24 24" fill="none" width="22" height="22"><path d="M4 9V6.5A1.5 1.5 0 0 1 5.5 5H8M4 15v2.5A1.5 1.5 0 0 0 5.5 19H8M20 9V6.5A1.5 1.5 0 0 0 18.5 5H16M20 15v2.5a1.5 1.5 0 0 1-1.5 1.5H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/></svg>
+        <span class="camera-scan-label">สแกนด้วยกล้อง</span>
+      </button>
+    </div>
+  </div>
+
+  <main class="layout" id="posView">
+
+    <!-- Left: product search results -->
+    <section class="panel panel-search">
+      <div class="results" id="results">
+        <div class="empty-state" id="emptyState">
+          <svg class="empty-icon" viewBox="0 0 24 24" fill="none" width="46" height="46"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <p>พิมพ์ชื่อสินค้า รหัสสินค้า หรือยิงบาร์โค้ดเพื่อเริ่มค้นหา</p>
+          <p class="empty-state-sub">พบสินค้าทั้งหมด <span id="productCount">0</span> รายการในระบบ</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right: current bill / cart (large, primary focus) -->
+    <section class="panel panel-cart">
+      <div class="cart-header">
+        <h2 id="cartTitle">บิล 1</h2>
+        <button class="btn-text" id="renameBillBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="13" height="13"><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          เปลี่ยนชื่อ
+        </button>
+      </div>
+
+      <div class="cart-lines" id="cartLines">
+        <div class="cart-empty" id="cartEmpty">ยังไม่มีสินค้าในบิลนี้</div>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>จำนวนชิ้น</span>
+          <span id="summaryQty">0</span>
+        </div>
+        <div class="summary-row total-row">
+          <span>ยอดรวมทั้งสิ้น</span>
+          <span id="summaryTotal">0.00 บาท</span>
+        </div>
+      </div>
+
+      <div class="cart-actions">
+        <button class="btn-ghost" id="clearBillBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="17" height="17"><path d="M4 7h16M9 7V4.8c0-.4.4-.8.9-.8h4.2c.5 0 .9.4.9.8V7m-9 0 .6 12.4c0 .9.7 1.6 1.6 1.6h5.6c.9 0 1.6-.7 1.6-1.6L18 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          ล้างบิล
+        </button>
+        <button class="btn-primary" id="checkoutBtn">
+          <svg viewBox="0 0 24 24" fill="none" width="19" height="19"><path d="M4 6h16M4 6l1.4 10.5a2 2 0 0 0 2 1.7h9.2a2 2 0 0 0 2-1.7L20 6M4 6l-.7-2.3A1 1 0 0 0 2.3 3H1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="21" r="1.3" fill="currentColor"/><circle cx="17" cy="21" r="1.3" fill="currentColor"/></svg>
+          ชำระเงิน
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Dashboard / sales history view -->
+  <main class="dashboard" id="dashboardView" hidden>
+
+    <div class="dash-toolbar">
+      <div class="range-picker" id="rangePicker">
+        <button class="range-btn active" data-range="today">วันนี้</button>
+        <button class="range-btn" data-range="7d">7 วันล่าสุด</button>
+        <button class="range-btn" data-range="30d">30 วันล่าสุด</button>
+        <button class="range-btn" data-range="month">เดือนนี้</button>
+        <button class="range-btn" data-range="all">ทั้งหมด</button>
+      </div>
+    </div>
+
+    <div class="dash-cards" id="dashCards"></div>
+
+    <div class="dash-chart-panel">
+      <h3>ยอดขายรายวัน</h3>
+      <div class="bar-chart" id="barChart"></div>
+    </div>
+
+    <div class="dash-table-panel">
+      <div class="table-tabs" id="tableTabs">
+        <button class="ttab active" data-table="bills">รายบิล</button>
+        <button class="ttab" data-table="daily">รายวัน</button>
+        <button class="ttab" data-table="monthly">รายเดือน</button>
+      </div>
+      <div class="table-wrap" id="tableWrap"></div>
+    </div>
+
+  </main>
+
+</div>
+
+<!-- Receipt / checkout modal -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div id="receiptContent" class="receipt"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="modalCloseBtn">ปิด</button>
+      <button class="btn-primary" id="printBtn">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        พิมพ์ใบเสร็จ
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm dialog -->
+<div class="modal-backdrop" id="confirmBackdrop">
+  <div class="modal modal-small">
+    <p id="confirmText">ยืนยันการทำรายการ?</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="confirmNo">ยกเลิก</button>
+      <button class="btn-danger" id="confirmYes">ยืนยัน</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drug label printing modal -->
+<div class="modal-backdrop" id="labelModalBackdrop">
+  <div class="modal modal-label">
+    <h3 class="modal-title">พิมพ์ฉลากยา</h3>
+
+    <div class="label-editor">
+      <div class="label-form">
+
+        <label class="field">
+          <span>ชื่อยา</span>
+          <input type="text" id="labelDrugName" autocomplete="off" />
+        </label>
+
+        <label class="field">
+          <span>วิธีใช้</span>
+          <select id="labelVerb">
+            <option value="รับประทาน">รับประทาน (กิน)</option>
+            <option value="ทา">ทา</option>
+            <option value="หยอด">หยอด</option>
+            <option value="พ่น">พ่น</option>
+            <option value="อมใต้ลิ้น">อมใต้ลิ้น</option>
+            <option value="เหน็บ/สอด">เหน็บ/สอด</option>
+          </select>
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>ปริมาณต่อครั้ง</span>
+            <input type="number" id="labelDoseAmount" min="0" step="0.5" value="1" />
+          </label>
+          <label class="field">
+            <span>หน่วย</span>
+            <select id="labelDoseUnit">
+              <option value="เม็ด">เม็ด</option>
+              <option value="แคปซูล">แคปซูล</option>
+              <option value="ซีซี">ซีซี</option>
+              <option value="ช้อนชา (5 ซีซี)">ช้อนชา (5 ซีซี)</option>
+              <option value="ช้อนโต๊ะ (15 ซีซี)">ช้อนโต๊ะ (15 ซีซี)</option>
+              <option value="ซอง">ซอง</option>
+              <option value="หยด">หยด</option>
+              <option value="พัฟ/กด">พัฟ/กด</option>
+              <option value="__custom">อื่นๆ ระบุ...</option>
+            </select>
+          </label>
+        </div>
+        <input type="text" id="labelDoseUnitCustom" class="field-full hidden-field" placeholder="ระบุหน่วย เช่น บางๆ บริเวณที่มีอาการ" />
+
+        <label class="field">
+          <span>มื้ออาหาร</span>
+          <select id="labelMeal">
+            <option value="ก่อนอาหาร 30 นาที">ก่อนอาหาร 30 นาที</option>
+            <option value="ก่อนอาหาร">ก่อนอาหาร</option>
+            <option value="หลังอาหารทันที" selected>หลังอาหารทันที</option>
+            <option value="หลังอาหาร">หลังอาหาร</option>
+            <option value="พร้อมอาหาร">พร้อมอาหาร</option>
+            <option value="">ไม่ระบุ / ไม่เกี่ยวกับมื้ออาหาร</option>
+          </select>
+        </label>
+
+        <label class="field">
+          <span>ความถี่</span>
+          <select id="labelFrequency">
+            <option value="วันละ 1 ครั้ง">วันละ 1 ครั้ง</option>
+            <option value="วันละ 2 ครั้ง" selected>วันละ 2 ครั้ง</option>
+            <option value="วันละ 3 ครั้ง">วันละ 3 ครั้ง</option>
+            <option value="วันละ 4 ครั้ง">วันละ 4 ครั้ง</option>
+            <option value="__custom_hours">ทุก... ชั่วโมง</option>
+            <option value="เมื่อมีอาการ">เมื่อมีอาการ (PRN)</option>
+          </select>
+        </label>
+        <label class="field field-full hidden-field" id="labelCustomHoursField">
+          <span>ทุกกี่ชั่วโมง</span>
+          <input type="number" id="labelCustomHours" min="1" value="6" />
+        </label>
+
+        <div class="field">
+          <span>เวลาที่ใช้ (เลือกได้หลายช่วง)</span>
+          <div class="checkbox-row">
+            <label><input type="checkbox" class="labelTimeCk" value="เช้า" checked /> เช้า</label>
+            <label><input type="checkbox" class="labelTimeCk" value="เที่ยง" /> เที่ยง</label>
+            <label><input type="checkbox" class="labelTimeCk" value="เย็น" checked /> เย็น</label>
+            <label><input type="checkbox" class="labelTimeCk" value="ก่อนนอน" /> ก่อนนอน</label>
+          </div>
+        </div>
+
+        <label class="field">
+          <span>ข้อบ่งใช้ / สรรพคุณ</span>
+          <input type="text" id="labelIndication" placeholder="เช่น บรรเทาปวด ลดไข้" />
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>ชื่อผู้ป่วย (ไม่บังคับ)</span>
+            <input type="text" id="labelPatientName" placeholder="ไม่บังคับ" />
+          </label>
+          <label class="field">
+            <span>จำนวนป้ายที่พิมพ์</span>
+            <input type="number" id="labelCopies" min="1" value="1" />
+          </label>
+        </div>
+      </div>
+
+      <div class="label-preview-wrap">
+        <div class="label-preview-title">ตัวอย่างฉลาก (ขนาดจริง 80×50 มม.)</div>
+        <div id="labelPreview" class="label-preview-frame"></div>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" id="labelCloseBtn">ปิด</button>
+      <button class="btn-primary" id="labelPrintBtn">
+        <svg viewBox="0 0 24 24" fill="none" width="18" height="18"><path d="M6 9V3h12v6M6 18H4a1 1 0 0 1-1-1v-6a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-2M6 14h12v7H6v-7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        พิมพ์ฉลาก
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Camera barcode scanning modal -->
+<div class="modal-backdrop" id="cameraModalBackdrop">
+  <div class="modal modal-camera">
+    <h3 class="modal-title">สแกนบาร์โค้ดด้วยกล้อง</h3>
+    <div class="camera-wrap">
+      <video id="cameraVideo" playsinline autoplay muted></video>
+      <div class="camera-guide"></div>
+    </div>
+    <p class="camera-status" id="cameraStatus">กำลังเปิดกล้อง...</p>
+    <div class="modal-actions">
+      <button class="btn-ghost" id="cameraCancelBtn">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
